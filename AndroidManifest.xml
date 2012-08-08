@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="edu.purdue.rockapp"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="10" />
+    
+    <permission 
+        android:name="edu.purdue.libwaterapps.permission.ROCKS"
+        android:label="@string/rock_perm_label"
+        android:description="@string/rock_perm_desc"
+        android:protectionLevel="normal" />
+    
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="edu.purdue.libwaterapps.permission.ROCKS" />
+
+    <application android:label="@string/app_name"
+        android:theme="@style/RockAppActivity"
+        android:icon="@drawable/ic_launcher">
+        
+       	<uses-library android:name="com.google.android.maps" /> 
+       	
+       	<provider android:authorities="edu.purdue.libwaterapps.provider"
+       	    android:name="edu.purdue.libwaterapps.provider.RockProvider" android:exported="true" 
+       	    android:permission="edu.purdue.libwaterapps.permission.ROCKS" android:enabled="true" />
+       	
+        <activity android:name="RockAppActivity"
+                  android:windowSoftInputMode="adjustResize"
+                  android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+
+    </application>
+
+</manifest>

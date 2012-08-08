@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+         
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:padding="5dp">
+    
+    <ImageView 
+        android:id="@+id/rock_list_image"
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_marginLeft="5px"
+        android:layout_marginRight="20px"
+        android:layout_marginTop="5px"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_launcher" />
+    
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:orientation="vertical">
+        
+	    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+	        android:id="@+id/rock_list_type"
+	        android:layout_width="wrap_content"
+	     	android:layout_height="wrap_content"
+	     	android:text=""
+	     	android:textSize="15dp" />
+	    
+        <TextView 
+            android:id="@+id/rock_list_distance"
+            android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:text=""
+        	android:textSize="25dp" />
+        
+    </LinearLayout>
+    
+</LinearLayout>
+
