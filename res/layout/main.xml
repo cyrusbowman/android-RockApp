@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Main layout of the App is relative -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:keepScreenOn="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
    
+    <!-- All of the App screen is a normal Google MapView -->
 	<com.google.android.maps.MapView 
 	    android:id="@+id/map"
 		android:layout_width="match_parent"
@@ -12,107 +14,10 @@
 		android:clickable="true"
 		android:state_enabled="true" />
 	
-	<!-- Layout for the menu that pops up -->
-	<edu.purdue.libwaterapps.view.SlideLayout
-	    android:id="@+id/menu"
-	    speed="300"
-	    slideOutDirection="up"
-	    android:focusable="true"
-	    android:focusableInTouchMode="true"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_alignBottom="@id/map"
-	    android:background="@drawable/menu_round_corners"
-	    android:visibility="invisible" >
-
-	    <!-- Comments Box -->
-	    <EditText
-	        android:id="@+id/comments"
-	        android:layout_width="0dip"
-	        android:layout_height="match_parent"
-	        android:layout_weight="1"
-	        android:layout_marginRight="0dp"
-	        android:layout_marginLeft="10dp"
-	        android:layout_marginTop="10dp"
-	        android:layout_marginBottom="10dp"
-	        android:background="@drawable/textbox_round_corners"
-	        android:gravity="top"
-	        android:hint="@string/comments"
-	        android:inputType="textMultiLine" />
-
-	    <!-- Control Buttons -->
-	    <RelativeLayout
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_margin="10dp">
-
-	        <!-- Toggle picked up status of the rock button -->
-	        <ImageButton
-	            android:id="@+id/button_picked"
-	            style="@style/image_button"
-	            android:src="@drawable/button_picked"
-	            android:contentDescription="@string/rock_picked" 
-	            android:onClick="toggleCurrentRock"/>
-
-	        <!-- Take a picture of a the rock button -->
-	        <ImageButton
-	            android:id="@+id/button_picture"
-	            android:layout_below="@id/button_picked"
-	            style="@style/image_button"
-	            android:src="@drawable/rock_picture"
-	            android:contentDescription="@string/rock_picture"
-	            android:onClick="takePicture" />
-	    </RelativeLayout>
-	    
-	</edu.purdue.libwaterapps.view.SlideLayout>
+	<!-- A layout which has the views needed to edit a rock's meta data -->
+	<include layout="@layout/rock_edit" />
 	
-	<LinearLayout
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal"
-	    android:layout_alignTop="@id/map"
-	    android:layout_alignLeft="@id/map" >
-	    
-		<!-- Move map to current GPS location button -->
-		<ImageButton
-			android:id="@+id/move_to_gps"
-			style="@style/image_button"
-			android:src="@drawable/move_to_gps"
-			android:contentDescription="@string/move_to_gps"
-			android:onClick="moveToGps"/>
-		
-		<!-- Add a rock button -->	
-		<ImageButton
-			android:id="@+id/rock_add"
-			style="@style/image_button"
-			android:src="@drawable/rock_add"
-			android:contentDescription="@string/rock_add"
-			android:onClick="addRock"/>
-		
-	</LinearLayout>
-	
-	<!-- Get a list of rocks button -->
-	<ImageButton
-		android:id="@+id/rock_list"
-		style="@style/image_button"
-		android:src="@drawable/rock_list"
-		android:contentDescription="@string/rock_list"
-		android:layout_alignTop="@id/map"
-		android:layout_alignRight="@id/map"
-		android:onClick="showRockList"/>
-	
-	<ImageView
-	    android:id="@+id/rock_drag_picked"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:src="@drawable/rock_picked"
-	    android:visibility="gone" />
-	
-	<ImageView
-	    android:id="@+id/rock_drag_not_picked"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:src="@drawable/rock_not_picked"
-	    android:visibility="gone" />
+	<!-- A layout which has the views needed to move a rock around on the map -->
+	<include layout="@layout/rock_move" />
 	
 </RelativeLayout>

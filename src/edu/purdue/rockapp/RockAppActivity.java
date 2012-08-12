@@ -17,12 +17,13 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -37,13 +38,16 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.OverlayItem;
 
 import edu.purdue.libwaterapps.rock.Rock;
+import edu.purdue.libwaterapps.utils.NotifyArrayList;
 import edu.purdue.libwaterapps.view.SlideLayout;
+import edu.purdue.libwaterapps.view.maps.RockMapOverlay;
 
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;
 	private MapController mMapController;
 	private MyLocationOverlay mMyLocation;
+	private NotifyArrayList<Rock> mRockList;
 	private RockMapOverlay mRockOverlay;
 	private boolean mKnowLocation = false;
 	private EditText comments;
@@ -62,8 +66,8 @@ public class RockAppActivity extends MapActivity {
 		super.onCreate(savedInstanceState);
 		
 		bundle = savedInstanceState;
-		
 		// Set the view for the application
+		
 		setContentView(R.layout.main);
 		
 		// Store the menu view
@@ -111,21 +115,22 @@ public class RockAppActivity extends MapActivity {
 		
 		enableLocation();
 		
+		// Get a list of rocks
+		mRockList = Rock.getAllRocks(this);
+		
 		// Make the rock overlays
-		mRockOverlay = new RockMapOverlay(this, this.getResources().getDrawable(R.drawable.rock_not_picked),
-				this.getResources().getDrawable(R.drawable.rock_picked),
-				(ImageView)findViewById(R.id.rock_drag_picked),
-				(ImageView)findViewById(R.id.rock_drag_not_picked));
+		mRockOverlay = new RockMapOverlay(mRockList, this.getResources().getDrawable(R.drawable.rock_not_picked),
+				this.getResources().getDrawable(R.drawable.rock_picked));
 		
 		// Hide menu when overlay item loses focus
 		mRockOverlay.setOnFocusChangeListener(new OnFocusChangeListener() {
 			@SuppressWarnings("rawtypes")
 			public void onFocusChanged(ItemizedOverlay overlay, OverlayItem newFocus) {
 				if(newFocus == null) {
-					mRockOverlay.setCurrent(-1);
+					mRockOverlay.setCurrent(null);
 					((SlideLayout)findViewById(R.id.menu)).hide();
 				} else {
-					updateControlsWithNewRock(((RockMapOverlay)overlay).getCurrentRock());
+					updateControlsWithNewRock(mRockOverlay.getCurrent());
 					((SlideLayout)findViewById(R.id.menu)).show();
 				}
 			}
@@ -147,8 +152,7 @@ public class RockAppActivity extends MapActivity {
 	}
 
 	/*
-	 * Called by Android when application comes from in view to no longer in
-	 * view
+	 * Called by Android when application comes from in view to no longer in view
 	 */
 	@Override
 	protected void onPause() {
@@ -162,7 +166,7 @@ public class RockAppActivity extends MapActivity {
 		super.onSaveInstanceState(savedInstanceState);
 		
 		if(this.menu.isOpen()) {
-			savedInstanceState.putInt("current", this.mRockOverlay.getCurrent());
+			savedInstanceState.putInt("current", this.mRockOverlay.getCurrent().getId());
 		}
 		
 		if(lastPicture != null) {
@@ -176,12 +180,17 @@ public class RockAppActivity extends MapActivity {
 		return false;
 	}
 	
-	public void selectCurrentRock() {
-		Rock rock = this.mRockOverlay.getCurrentRock();
-		OverlayItem overlay = this.mRockOverlay.getCurrentOverlayItem();
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
 		
-		this.mRockOverlay.setFocus(null);
-		this.mRockOverlay.setFocus(overlay);
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	public void selectCurrentRock() {
+		Rock rock = this.mRockOverlay.getCurrent();
+		
 		this.menu.show();
 		
 		// Ask map to animate
@@ -217,7 +226,9 @@ public class RockAppActivity extends MapActivity {
 		if (!mKnowLocation) {
 			Toast.makeText(this, "Please wait for GPS Lock", Toast.LENGTH_SHORT).show();
 		} else {
-			mRockOverlay.addRock(mMyLocation.getMyLocation());
+			Rock rock = new Rock(this, mMyLocation.getMyLocation(), false);
+			rock.save();
+			mRockList.add(rock);
 		}
 	}
 
@@ -277,7 +288,7 @@ public class RockAppActivity extends MapActivity {
 			return;
 		}
 		
-		Rock rock = this.mRockOverlay.getCurrentRock();
+		Rock rock = this.mRockOverlay.getCurrent();
 		
 		if(rock == null || this.comments == null) {
 			return;
@@ -290,17 +301,17 @@ public class RockAppActivity extends MapActivity {
 	
 	public void toggleCurrentRock(View view) {
 		ImageButton button = (ImageButton)view;
-		Rock rock = this.mRockOverlay.getCurrentRock();
+		Rock rock = this.mRockOverlay.getCurrent();
 		
 		if(rock == null) {
 			return;
 		}
 		
 		if(!rock.isPicked()) {
-			this.mRockOverlay.setCurrentPicked(true);
+			rock.setPicked(true);
 			button.setSelected(true);
 		} else {
-			this.mRockOverlay.setCurrentPicked(false);
+			rock.setPicked(false);
 			button.setSelected(false);
 		}
 		
@@ -372,7 +383,7 @@ public class RockAppActivity extends MapActivity {
 					Bitmap pic = sizePicture(lastPicture);
 					picture.setImageBitmap(pic);
 					
-					Rock rock = mRockOverlay.getCurrentRock();
+					Rock rock = mRockOverlay.getCurrent();
 					rock.setPicture(lastPicture);
 					rock.save();
 				}

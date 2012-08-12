@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
          
+<!-- This layout is used for each element in the "rock list". This allows for a customized 
+     look and feel, ex show the meters away from current location, etc. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:layout_width="fill_parent"
     android:padding="5dp">
     
+    <!-- The image of the rock -->
     <ImageView 
         android:id="@+id/rock_list_image"
         android:layout_width="50px"
@@ -20,13 +23,15 @@
         android:layout_width="wrap_content"
         android:orientation="vertical">
         
-	    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        <!-- Say in words the type of rock (picked/not picked) -->
+	    <TextView 
 	        android:id="@+id/rock_list_type"
 	        android:layout_width="wrap_content"
 	     	android:layout_height="wrap_content"
 	     	android:text=""
 	     	android:textSize="15dp" />
 	    
+	    <!-- Display the distance in meters the rock is away from here -->
         <TextView 
             android:id="@+id/rock_list_distance"
             android:layout_width="wrap_content"

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
- 	<!-- <color name="button_image_background">#803C3CC8</color> -->
     <color name="button_image_background">#90000000</color>
     <color name="button_image_border">#BABABA</color>
     
@@ -8,4 +7,6 @@
     
     <color name="textbox_background">#FFFFFF</color>
     <color name="textbox_border">#BABABA</color>
+    
+ 	<color name="rock_move_background">#A0000000</color>
 </resources>

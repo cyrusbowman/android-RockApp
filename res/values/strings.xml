@@ -3,14 +3,24 @@
     <string name="app_name">RockApp</string>
     <string name="google_api_key">02YP-AXMV63rQUc5m2Q-hrx9cApiK3b6gxKftjg</string>
     <string name="comments">Comments...</string>
-    <string name="rock_add">Add a rock at your current location</string>
-    <string name="rock_list">Display a list of rocks and how far away they are</string>
+    
+    <string name="menu_add">New Rock</string>
+    <string name="menu_list">List Rocks</string>
+    <string name="menu_gps">Move to You</string>
+    <string name="menu_show_type">Hide/Show Rocks By Type</string>
+    <string name="menu_all_rocks">All Rocks</string>
+    <string name="menu_picked">Picked Up Rocks</string>
+    <string name="menu_not_picked">Not Picked Up Rocks</string>
+    
+    <string name="menu_rock_edit_accept">Accept</string>
+    <string name="menu_rock_edit_reject">Reject</string>
+    
     <string name="rock_picked">Toggle if rock needs to be picked up or already has</string>
     <string name="rock_picture">Take picture of rock for later viewing</string>
-    <string name="move_to_gps">Move map to show your current location</string>
     <string name="rock_list_title">Zoom to a rock</string>
     <string name="rock_picked_up">Already Picked Up</string>
     <string name="rock_not_picked_up">Need to Pick Up</string>
     <string name="rock_perm_desc">Let apps access your database of rocks</string>
     <string name="rock_perm_label">Rocks Access</string>
+    
 </resources>
