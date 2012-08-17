@@ -58,7 +58,7 @@ public class RockArrayAdapter extends ArrayAdapter<String> {
 			Location.distanceBetween(currentLoc.getLatitudeE6()/1e6, currentLoc.getLongitudeE6()/1e6, 
 					rock.getLat()/1e6, rock.getLon()/1e6, results);
 			
-			distanceView.setText(Float.toString(results[0]) + " meters away");
+			distanceView.setText(Integer.toString((int)results[0]) + " meters away");
 		}
 		
 		return rowView;

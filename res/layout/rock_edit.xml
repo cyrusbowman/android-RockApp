@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Layout for the menu that pops up -->
-<edu.purdue.libwaterapps.view.SlideLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<edu.purdue.rockapp.view.RockMenu xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/menu"
     speed="300"
     slideOutDirection="up"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_alignBottom="@id/map"
+	android:layout_alignBottom="@id/map"
     android:background="@drawable/menu_round_corners"
     android:visibility="invisible" >
 
     <!-- Comments Box -->
     <EditText
+        style="@style/rockApp.CommentsBox"
         android:id="@+id/comments"
         android:layout_width="0dip"
         android:layout_height="match_parent"
@@ -22,9 +21,9 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
-        android:background="@drawable/textbox_round_corners"
         android:gravity="top"
         android:hint="@string/comments"
+        android:background="@drawable/textbox_round_corners"
         android:inputType="textMultiLine" />
 
     <!-- Control Buttons -->
@@ -38,8 +37,7 @@
             android:id="@+id/button_picked"
             style="@style/image_button"
             android:src="@drawable/button_picked"
-            android:contentDescription="@string/rock_picked" 
-            android:onClick="toggleCurrentRock"/>
+            android:contentDescription="@string/rock_picked" />
 
         <!-- Take a picture of a the rock button -->
         <ImageButton
@@ -47,8 +45,7 @@
             android:layout_below="@id/button_picked"
             style="@style/image_button"
             android:src="@drawable/rock_picture"
-            android:contentDescription="@string/rock_picture"
-            android:onClick="takePicture" />
+            android:contentDescription="@string/rock_picture" />
     </RelativeLayout>
     
-</edu.purdue.libwaterapps.view.SlideLayout>
+</edu.purdue.rockapp.view.RockMenu>

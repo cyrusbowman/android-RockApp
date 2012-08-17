@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <item 
+        android:id="@+id/rock_delete"
+        android:title="@string/rock_delete"
+        android:icon="@drawable/delete"
+        android:showAsAction="always|withText" />
+    
+    <item 
+        android:id="@+id/rock_move"
+        android:title="@string/rock_move"
+        android:icon="@drawable/move"
+        android:showAsAction="always|withText" />
+
+</menu>

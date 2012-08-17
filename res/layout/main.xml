@@ -1,23 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Main layout of the App is relative -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
     android:keepScreenOn="true"
+	android:padding="0dp"
+	android:layout_margin="0dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
    
     <!-- All of the App screen is a normal Google MapView -->
 	<com.google.android.maps.MapView 
 	    android:id="@+id/map"
+	    android:layout_alignLeft="@id/main"
+	    android:layout_alignRight="@id/main"
+	    android:layout_alignTop="@id/main"
+	    android:layout_alignBottom="@id/main"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
+		android:layout_height="match_parent"
+		android:padding="0dp"
+		android:layout_margin="0dp"
 		android:apiKey="@string/google_api_key"
 		android:clickable="true"
 		android:state_enabled="true" />
 	
+	<!-- A layer used to move rocks around on -->
+	<edu.purdue.rockapp.view.RockMove xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:id="@+id/rock_move"
+	    android:layout_alignLeft="@id/main"
+	    android:layout_alignRight="@id/main"
+	    android:layout_alignTop="@id/main"
+	    android:layout_alignBottom="@id/main"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:visibility="invisible"
+	    android:background="@color/rock_move_background" />
+	
 	<!-- A layout which has the views needed to edit a rock's meta data -->
 	<include layout="@layout/rock_edit" />
-	
-	<!-- A layout which has the views needed to move a rock around on the map -->
-	<include layout="@layout/rock_move" />
-	
+
 </RelativeLayout>
