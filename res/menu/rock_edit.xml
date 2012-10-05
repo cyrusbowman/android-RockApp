@@ -6,11 +6,5 @@
         android:title="@string/rock_delete"
         android:icon="@drawable/delete"
         android:showAsAction="always|withText" />
-    
-    <item 
-        android:id="@+id/rock_move"
-        android:title="@string/rock_move"
-        android:icon="@drawable/move"
-        android:showAsAction="always|withText" />
 
 </menu>

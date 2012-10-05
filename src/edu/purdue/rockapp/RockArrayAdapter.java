@@ -19,6 +19,8 @@ public class RockArrayAdapter extends ArrayAdapter<String> {
 	private final Context context;
 	private ArrayList<Rock> rocks;
 	private GeoPoint currentLoc;
+	private static final double METERS_TO_FEET = 3.28084;
+	private static final double FEET_TO_MILES = 0.00018939393;
 	
 	public RockArrayAdapter(Context context, String[] values, ArrayList<Rock> rocks, GeoPoint currentLoc) {
 		this(context, values);
@@ -58,7 +60,26 @@ public class RockArrayAdapter extends ArrayAdapter<String> {
 			Location.distanceBetween(currentLoc.getLatitudeE6()/1e6, currentLoc.getLongitudeE6()/1e6, 
 					rock.getLat()/1e6, rock.getLon()/1e6, results);
 			
-			distanceView.setText(Integer.toString((int)results[0]) + " meters away");
+			// Convert to feet
+			results[0] *= METERS_TO_FEET;
+			
+			String text;
+			if(results[0] == 1) {
+				text = "1 foot away";
+			} else if(results[0] < 10) {
+				text = String.format("%.1f feet away", results[0]);
+			} else if(results[0] < 500) {
+				text = String.format("%d feet away", (int)results[0]);
+			} else {
+				results[0] *= FEET_TO_MILES;
+				if(results[0] == 1) {
+					text = "1 mile away";
+				} else {
+					text = String.format("%.1f miles away", results[0]);
+				}
+			}
+			// Set the text value
+			distanceView.setText(text);
 		}
 		
 		return rowView;

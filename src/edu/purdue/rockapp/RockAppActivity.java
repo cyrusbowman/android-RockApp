@@ -10,12 +10,16 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +56,10 @@ public class RockAppActivity extends MapActivity {
 	private Bundle bundle = null;
 	private RockBroadcastReciever rockBroadcastReciever;
 	private RockMenuBroadcastReciever rockMenuBroadcastReciever;
+	private final Handler uiHandler = new Handler();
+	private int startingLatSpan = 0;
+	private int startingLonSpan = 0;
+	private GeoPoint startingCenter = null;
 	
 	// UI States
 	private static final int STATE_DEFAULT = 0;
@@ -61,14 +69,20 @@ public class RockAppActivity extends MapActivity {
 	// Request codes for activity results
 	private static final int REQUEST_PICTURE = 1;
 	
+	// Default zoom span
+	private static final int DEFAULT_ZOOM_LAT_SPAN = 15000;
+	private static final int DEFAULT_ZOOM_LONG_SPAN = 15000;
+	private static final int DEFAULT_START_ZOOM_LAT_SPAN = 50000;
+	private static final int DEFAULT_START_ZOOM_LONG_SPAN = 50000;
+	
 	/* Called by Android when application is created */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		bundle = savedInstanceState;
-		// Set the view for the application
 		
+		// Set the view for the application
 		setContentView(R.layout.main);
 		
 		// Store the rock menu view
@@ -122,11 +136,17 @@ public class RockAppActivity extends MapActivity {
 			
 			// Restore previous state
 			setState(bundle.getInt("state", STATE_DEFAULT));
+			
 		} else {
 			// Otherwise set default initial state
 			setState(STATE_DEFAULT);
 		}
-		
+	
+		// Store the span and center where we started to see if we should zoom
+		// when we get our first lock
+		startingLatSpan = mMapView.getLatitudeSpan();
+		startingLonSpan = mMapView.getLongitudeSpan();
+		startingCenter = mMapView.getMapCenter();
 	}
 
 	/* Called by Android when application comes from not in view to in view */
@@ -136,6 +156,9 @@ public class RockAppActivity extends MapActivity {
 		
 		// Start looking for current location
 		enableLocation();
+		
+		// Update the action bar
+		invalidateOptionsMenu();
 		
 		// Listen to changes in the rocks and automatically update from them
 		mRockOverlay.registerListeners();
@@ -219,7 +242,6 @@ public class RockAppActivity extends MapActivity {
 	 */
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		
 		MenuItem showHideItem = menu.findItem(R.id.show_hide);
 		MenuItem currentShowHideItem;	
 		
@@ -244,11 +266,26 @@ public class RockAppActivity extends MapActivity {
 		}
 		
 		// Copy the current selection to the action bar
-		showHideItem.setIcon(currentShowHideItem.getIcon());
 		showHideItem.setTitle(currentShowHideItem.getTitle());
 		
 		// Mark the current one as checked 
 		currentShowHideItem.setChecked(true);
+		
+		// The location button changes depending the current state
+		// of location
+		MenuItem gps = menu.findItem(R.id.gps);
+		if(hasLocationProvider()) {
+			if(mKnowLocation) {
+				gps.setIcon(R.drawable.gps_found);
+				gps.setTitle(R.string.menu_gps);
+			} else {
+				gps.setIcon(R.drawable.gps_searching);
+				gps.setTitle(R.string.menu_gps_searching);
+			}
+		} else {
+			gps.setIcon(R.drawable.gps_off);
+			gps.setTitle(R.string.menu_gps_off);
+		}
 		
 		return true;
 	}
@@ -273,25 +310,19 @@ public class RockAppActivity extends MapActivity {
 			
 			case R.id.all_rocks:
 				// set the new showHide, update the map, and update the action bar
-				mRockOverlay.setShowHide(RockMapOverlay.SHOW_ALL_ROCKS);
-				mMapView.postInvalidate();
-				invalidateOptionsMenu();
+				changeRockTypeShowHide(RockMapOverlay.SHOW_ALL_ROCKS);
 				result = true;
 			break;
 			
 			case R.id.not_picked_rocks:
 				// set the new showHide, update the map, and update the action bar
-				mRockOverlay.setShowHide(RockMapOverlay.SHOW_NOT_PICKED_ROCKS);
-				mMapView.postInvalidate();
-				invalidateOptionsMenu();
+				changeRockTypeShowHide(RockMapOverlay.SHOW_NOT_PICKED_ROCKS);
 				result = true;
 			break;
 			
 			case R.id.picked_rocks:
 				// set the new showHide, update the map, and update the action bar
-				mRockOverlay.setShowHide(RockMapOverlay.SHOW_PICKED_ROCKS);
-				mMapView.postInvalidate();
-				invalidateOptionsMenu();
+				changeRockTypeShowHide(RockMapOverlay.SHOW_PICKED_ROCKS);
 				result = true;
 			break;
 				
@@ -346,6 +377,7 @@ public class RockAppActivity extends MapActivity {
 			break;	
 		}
 	
+		
 		// Enter new state
 		switch(newState) {
 			case STATE_DEFAULT:
@@ -368,18 +400,52 @@ public class RockAppActivity extends MapActivity {
 	}
 	
 	/*
+	 * A helper function to set what rock type to show/hide
+	 */
+	private void changeRockTypeShowHide(int type) {
+		// set the new showHide, update the map, and update the action bar
+		mRockOverlay.setShowHide(type);
+		mMapView.postInvalidate();
+		invalidateOptionsMenu();
+	}
+	
+	/*
 	 * Moves the map to current GPS location (if a fix is known)
 	 */
 	public void moveToGps() {
-		if (!mKnowLocation) {
-			Toast.makeText(this, "Please wait for GPS Lock", Toast.LENGTH_SHORT).show();
+		if(!hasLocationProvider()) {
+			showEnableLocationAlert();
 		} else {
-			// Ask map to animate
-			mMapController.animateTo(mMyLocation.getMyLocation());
-
-			// Make sure the animation starts ASAP
-			mMapView.postInvalidate();
+			if (!mKnowLocation) {
+				Toast.makeText(this, R.string.location_wait, Toast.LENGTH_SHORT).show();
+			} else {
+				moveMapTo(mMyLocation.getMyLocation(), true);
+			}
 		}
+	}
+	
+	/*
+	 * This function can move the map to a GeoPoint and if you want can adjust the zoom with reason.
+	 * If you are already zoomed in more then the default it does not change the view. Otherwise
+	 * it zooms you to the default zoom
+	 * 
+	 * When getMaxZoomLevel is fixed so it truly returns the max zoom level 
+	 * (http://code.google.com/p/android/issues/detail?id=2761) we can also zoom out until images are
+	 * available if the default zoom is too close for an area
+	 */
+	private void moveMapTo(GeoPoint p, boolean zoom) {
+		// See if we want to play with the zoom level
+		if(zoom) {
+			// If we are zoomed out too much zoom in to default span
+			if(mMapView.getLatitudeSpan() > DEFAULT_ZOOM_LAT_SPAN && mMapView.getLongitudeSpan() > DEFAULT_ZOOM_LONG_SPAN) {
+				mMapController.zoomToSpan(DEFAULT_ZOOM_LAT_SPAN, DEFAULT_ZOOM_LONG_SPAN);
+			}
+		}
+		
+		// Ask for the animation
+		mMapController.animateTo(p);
+		// Make sure the animation starts now
+		mMapView.postInvalidate();
 	}
 
 	/*
@@ -419,7 +485,7 @@ public class RockAppActivity extends MapActivity {
 	private void enableLocation() {
 		// Make sure we mark that we do not know where we are
 		mKnowLocation = false;
-
+		
 		// Ask to start find location
 		mMyLocation.enableMyLocation();
 
@@ -427,10 +493,75 @@ public class RockAppActivity extends MapActivity {
 		mMyLocation.runOnFirstFix(new Runnable() {
 			public void run() {
 				mKnowLocation = true;
+				
+				// We have not moved so lets move to the current fix
+				GeoPoint p = mMapView.getMapCenter();
+				if(startingLatSpan == mMapView.getLatitudeSpan() &&
+						startingLonSpan == mMapView.getLongitudeSpan() &&
+						startingCenter != null &&
+						startingCenter.getLatitudeE6() == p.getLatitudeE6() &&
+						startingCenter.getLongitudeE6() == p.getLongitudeE6() &&
+						mMapView.getLatitudeSpan() > DEFAULT_START_ZOOM_LAT_SPAN &&
+						mMapView.getLongitudeSpan() > DEFAULT_START_ZOOM_LONG_SPAN) {
+					moveMapTo(mMyLocation.getMyLocation(), true);
+				}
+				
+				// Update the action bar (on the UI thread) for the location button
+				invalidateActionBar();
 			}
 		});
 	}
 	
+	/* A helper function to check to see if there is some sort of location provider or not */
+	private boolean hasLocationProvider() {
+		LocationManager locMan = (LocationManager)getSystemService(LOCATION_SERVICE);
+		
+		// See if we have either GPS or network locations
+		if(!locMan.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
+		   !locMan.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/* Creates a dialog which the user can use to enable a location service. 
+	 * You should call when you think a location service needs to be enabled
+	 */
+	private void showEnableLocationAlert() {
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		
+		builder.setTitle(R.string.enable_location_title);
+		builder.setMessage(R.string.enable_location_message);
+		
+		builder.setPositiveButton(R.string.enable_location_settings, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// Show the Android location settings menu
+				Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(settingsIntent);
+			}
+		});
+		
+		builder.setNegativeButton(R.string.enable_location_cancel, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// Do nothing... The app is much less interesting...
+			}
+		});
+		
+		builder.create().show();
+	}
+	
+	// Invalidate the action bar on the UI thread
+	private void invalidateActionBar() {
+		uiHandler.post(new Runnable() {
+			public void run() {
+				invalidateOptionsMenu();
+			}
+		});
+	}
+	
+	/* Helper function to display the rock list */
 	public void showRockList() {
 		ArrayList<Rock> rockList;
 		
@@ -438,8 +569,11 @@ public class RockAppActivity extends MapActivity {
 		
 		final GeoPoint currentLoc = mMyLocation.getMyLocation();
 		
+		// Sort the rocks by distance and type
 		Collections.sort(rockList, new Comparator<Rock>() {
+			
 			public int compare(Rock lhs, Rock rhs) {
+				// Put not picked before picked
 				if(lhs.isPicked() != rhs.isPicked()) {
 					if(lhs.isPicked()) {
 						return 1;
@@ -448,6 +582,7 @@ public class RockAppActivity extends MapActivity {
 					}
 				}
 				
+				// If we do not have a current location sort by ID for lack of anything less (should be roughly order of creation)
 				if(currentLoc == null) {
 					if(lhs.getId() > rhs.getId()) {
 						return 1;
@@ -455,6 +590,7 @@ public class RockAppActivity extends MapActivity {
 						return -1;
 					}
 				} else {
+					// If we have location sort by distance from current location
 					float[] resultLhs = new float[1];
 					float[] resultRhs = new float[1];
 					
@@ -472,15 +608,16 @@ public class RockAppActivity extends MapActivity {
 			}
 		});
 		
+		// Remove focus from overlay
 		mRockOverlay.setFocus(null);
 		
-		
+		// Build titles for list
 		String[] titleList = new String[rockList.size()];
-		
 		for(int i = 0; i < rockList.size(); i++) {
 			titleList[i] = rockList.get(i).toString();
 		}
 		
+		// Drive a AlertDialog with a RockArrayAdapter
 		RockArrayAdapter adapter = new RockArrayAdapter(this, titleList, rockList, currentLoc);
 		ListView listView = new ListView(this);
 		listView.setAdapter(adapter);
@@ -489,15 +626,27 @@ public class RockAppActivity extends MapActivity {
 		builder.setTitle(R.string.rock_list_title);
 		builder.setView(listView);
 		
+		// Show the dialog
 		final Dialog dialog = builder.create();
 		dialog.show();
 		
+		// React to selecting a menu option
 		listView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				RockArrayAdapter raa = (RockArrayAdapter)parent.getAdapter();
 				
-				mRockOverlay.setSelected(raa.getRock(position).getId());
-				mMapController.animateTo(new GeoPoint(raa.getRock(position).getLat(), raa.getRock(position).getLon()));
+				Rock rock = raa.getRock(position);
+				
+				// Select the rock and move to it
+				mRockOverlay.setSelected(rock.getId());
+				moveMapTo(new GeoPoint(rock.getLat(), rock.getLon()), true);
+				
+				if(mRockOverlay.getShowHide() == RockMapOverlay.SHOW_NOT_PICKED_ROCKS && rock.isPicked() ||
+						mRockOverlay.getShowHide() == RockMapOverlay.SHOW_PICKED_ROCKS && !rock.isPicked()) {
+					changeRockTypeShowHide(RockMapOverlay.SHOW_ALL_ROCKS);
+				}
+				
+				// Close the dialog
 				dialog.dismiss();
 			}
 		});

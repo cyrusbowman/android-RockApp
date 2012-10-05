@@ -1,11 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     
+    <!-- Add a new rock to the screen -->
+    <item 
+        android:id="@+id/add"
+        android:showAsAction="always" 
+	    android:icon="@drawable/add"
+        android:title="@string/menu_add"  />
+    
+    <!-- A button to move the map to current GPS location -->
+    <item 
+        android:id="@+id/gps"
+        android:showAsAction="always"
+	    android:icon="@drawable/gps_found"
+	    android:title="@string/menu_gps" />
+       
+    <!-- Show a list of all the rocks (and how far away they are from you) -->
+    <item 
+        android:id="@+id/list"
+        android:showAsAction="always" 
+	    android:icon="@drawable/list"
+        android:title="@string/menu_list"  />
+    
     <!-- Give a radiobox choice of what type of rocks to display on the screen -->
     <item
         android:id="@+id/show_hide"
-        android:showAsAction="ifRoom|withText"
-        android:icon="@drawable/rock_down"
+        android:showAsAction="ifRoom"
+        android:icon="@drawable/rock_select"
         android:title="@string/menu_not_picked">
         
         <menu>
@@ -36,25 +57,5 @@
     	</menu>
     	
 	</item>
-	
-    <item 
-        android:id="@+id/gps"
-        android:showAsAction="always|withText"
-	    android:icon="@drawable/gps_found"
-        android:title="@string/menu_gps" />
-    
-    <!-- Show a list of all the rocks (and how far away they are from you) -->
-    <item 
-        android:id="@+id/list"
-        android:showAsAction="always|withText" 
-	    android:icon="@drawable/list"
-        android:title="@string/menu_list"  />
-    
-    <!-- Add a new rock to the screen -->
-    <item 
-        android:id="@+id/add"
-        android:showAsAction="always|withText" 
-	    android:icon="@drawable/add"
-        android:title="@string/menu_add"  />
     
 </menu>
