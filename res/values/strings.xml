@@ -13,6 +13,7 @@
     <string name="menu_all_rocks">All Rocks</string>
     <string name="menu_picked">Picked Up Rocks</string>
     <string name="menu_not_picked">Not Picked Up Rocks</string>
+    <string name="menu_sync">Sync</string>
     
     <string name="menu_rock_edit_accept">Accept Move</string>
     <string name="menu_rock_edit_reject">Reject Move</string>
