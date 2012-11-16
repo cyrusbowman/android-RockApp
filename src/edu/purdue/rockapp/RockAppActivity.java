@@ -14,7 +14,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,29 +36,29 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MapView.ReticleDrawMode;
-import com.google.android.maps.MyLocationOverlay;
 
 import edu.purdue.libwaterapps.rock.Rock;
 import edu.purdue.libwaterapps.view.maps.RockMapOverlay;
+import edu.purdue.libwaterapps.view.maps.RockOverlay;
+import edu.purdue.rockapp.location.RockLocationManager;
 import edu.purdue.rockapp.view.RockMenu;
 import edu.purdue.rockapp.view.RockMove;
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;
 	private MapController mMapController;
-	private MyLocationOverlay mMyLocation;
+	private RockLocationManager mRockLocationManager;
 	private RockMapOverlay mRockOverlay;
+//	private RockOverlay mRockOverlay;
 	private RockMenu mRockMenu;
 	private RockMove mRockMove;
 	private int mCurrentState;
-	private boolean mKnowLocation = false;
 	private Bundle bundle = null;
 	private RockBroadcastReciever rockBroadcastReciever;
 	private RockMenuBroadcastReciever rockMenuBroadcastReciever;
 	private final Handler uiHandler = new Handler();
-	private int startingLatSpan = 0;
-	private int startingLonSpan = 0;
 	private GeoPoint startingCenter = null;
+	private int startingZoom = 0;
 	
 	// UI States
 	private static final int STATE_DEFAULT = 0;
@@ -97,14 +96,15 @@ public class RockAppActivity extends MapActivity {
 		// Save the map controller for later map animation
 		mMapController = mMapView.getController();
 		
-		// Get a myLocationOverlay to manage the GPS
-		mMyLocation = new MyLocationOverlay(this, mMapView);
-		mMyLocation.enableCompass();
-		mMapView.getOverlays().add(mMyLocation);
-		
 		// Add the rocks to the map 
+//		mRockOverlay = new RockOverlay(this, getResources().getDrawable(R.drawable.rock_picked));
 		mRockOverlay = new RockMapOverlay(this);
+		
 		mMapView.getOverlays().add(mRockOverlay);
+		
+		// Start the location manager
+		mRockLocationManager = new RockLocationManager(this, mMapView);
+		mRockLocationManager.showLocationOverlay();
 		
 		mRockMove = (RockMove)findViewById(R.id.rock_move);
 		
@@ -142,11 +142,10 @@ public class RockAppActivity extends MapActivity {
 			setState(STATE_DEFAULT);
 		}
 	
-		// Store the span and center where we started to see if we should zoom
+		// Store the  and center where we started to see if we should zoom
 		// when we get our first lock
-		startingLatSpan = mMapView.getLatitudeSpan();
-		startingLonSpan = mMapView.getLongitudeSpan();
 		startingCenter = mMapView.getMapCenter();
+		startingZoom = mMapView.getZoomLevel();
 	}
 
 	/* Called by Android when application comes from not in view to in view */
@@ -155,7 +154,7 @@ public class RockAppActivity extends MapActivity {
 		super.onResume();
 		
 		// Start looking for current location
-		enableLocation();
+		mRockLocationManager.enable();
 		
 		// Update the action bar
 		invalidateOptionsMenu();
@@ -181,8 +180,8 @@ public class RockAppActivity extends MapActivity {
 	protected void onPause() {
 		super.onPause();
 		
-		// No need for location when on on screen
-		disableLocation();
+		// No need for location when not on the screen
+		mRockLocationManager.disable();
 		
 		// No need to react to new rocks when not on screen (a new list will be generated in onResume)
 		mRockOverlay.unregisterListeners();
@@ -274,8 +273,8 @@ public class RockAppActivity extends MapActivity {
 		// The location button changes depending the current state
 		// of location
 		MenuItem gps = menu.findItem(R.id.gps);
-		if(hasLocationProvider()) {
-			if(mKnowLocation) {
+		if(mRockLocationManager.hasLocationProvider()) {
+			if(mRockLocationManager.haveUserLocation()) {
 				gps.setIcon(R.drawable.gps_found);
 				gps.setTitle(R.string.menu_gps);
 			} else {
@@ -413,13 +412,13 @@ public class RockAppActivity extends MapActivity {
 	 * Moves the map to current GPS location (if a fix is known)
 	 */
 	public void moveToGps() {
-		if(!hasLocationProvider()) {
+		if(!mRockLocationManager.hasLocationProvider()) {
 			showEnableLocationAlert();
 		} else {
-			if (!mKnowLocation) {
+			if (!mRockLocationManager.haveUserLocation()) {
 				Toast.makeText(this, R.string.location_wait, Toast.LENGTH_SHORT).show();
 			} else {
-				moveMapTo(mMyLocation.getMyLocation(), true);
+				moveMapTo(mRockLocationManager.getUserLocation(), true);
 			}
 		}
 	}
@@ -453,78 +452,11 @@ public class RockAppActivity extends MapActivity {
 	 * If it fails because the current location is unknown then use the center of the screen.
 	 */
 	public void addRock() {
-		GeoPoint p;
-		
-		// Put rock at current location, otherwise at the center of the screen
-		if (!mKnowLocation) {
-			p = mMapView.getMapCenter();
-		} else {
-			p = mMyLocation.getMyLocation();
-		}
-		
 		// Rock and save in DB (triggering it to display on the map)
-		Rock rock = new Rock(this, p, false);
+		Rock rock = new Rock(this, mRockLocationManager.getBestLocation(), false);
 		rock.save();
 	}
 
-	/* 
-	 * Helper function to stop tracking current location 
-	 */
-	private void disableLocation() {
-		// Mark that we no longer know where we are
-		mKnowLocation = false;
-
-		// Ask to stop tracking location
-		mMyLocation.disableMyLocation();
-	}
-
-	/*
-	 * Helper function to start tracking current location. Marks when we have
-	 * the first fix
-	 */
-	private void enableLocation() {
-		// Make sure we mark that we do not know where we are
-		mKnowLocation = false;
-		
-		// Ask to start find location
-		mMyLocation.enableMyLocation();
-
-		// Mark that we now know it for other use
-		mMyLocation.runOnFirstFix(new Runnable() {
-			public void run() {
-				mKnowLocation = true;
-				
-				// We have not moved so lets move to the current fix
-				GeoPoint p = mMapView.getMapCenter();
-				if(startingLatSpan == mMapView.getLatitudeSpan() &&
-						startingLonSpan == mMapView.getLongitudeSpan() &&
-						startingCenter != null &&
-						startingCenter.getLatitudeE6() == p.getLatitudeE6() &&
-						startingCenter.getLongitudeE6() == p.getLongitudeE6() &&
-						mMapView.getLatitudeSpan() > DEFAULT_START_ZOOM_LAT_SPAN &&
-						mMapView.getLongitudeSpan() > DEFAULT_START_ZOOM_LONG_SPAN) {
-					moveMapTo(mMyLocation.getMyLocation(), true);
-				}
-				
-				// Update the action bar (on the UI thread) for the location button
-				invalidateActionBar();
-			}
-		});
-	}
-	
-	/* A helper function to check to see if there is some sort of location provider or not */
-	private boolean hasLocationProvider() {
-		LocationManager locMan = (LocationManager)getSystemService(LOCATION_SERVICE);
-		
-		// See if we have either GPS or network locations
-		if(!locMan.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
-		   !locMan.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	
 	/* Creates a dialog which the user can use to enable a location service. 
 	 * You should call when you think a location service needs to be enabled
 	 */
@@ -567,7 +499,7 @@ public class RockAppActivity extends MapActivity {
 		
 		rockList = Rock.getRocks(this);
 		
-		final GeoPoint currentLoc = mMyLocation.getMyLocation();
+		final GeoPoint currentLoc = mRockLocationManager.getBestLocation();
 		
 		// Sort the rocks by distance and type
 		Collections.sort(rockList, new Comparator<Rock>() {
@@ -618,7 +550,7 @@ public class RockAppActivity extends MapActivity {
 		}
 		
 		// Drive a AlertDialog with a RockArrayAdapter
-		RockArrayAdapter adapter = new RockArrayAdapter(this, titleList, rockList, currentLoc);
+		RockArrayAdapter adapter = new RockArrayAdapter(this, titleList, rockList, currentLoc, mRockLocationManager.isUserOnMap());
 		ListView listView = new ListView(this);
 		listView.setAdapter(adapter);
 		

@@ -25,7 +25,7 @@ import edu.purdue.rockapp.R;
 
 public class RockMenu extends SlideLayout {
 	private EditText comments;
-	private ImageButton move;
+	private ImageButton cancel;
 	private ImageButton picked;
 	private ImageButton picture;
 	private Drawable pictureDrawable;
@@ -57,7 +57,7 @@ public class RockMenu extends SlideLayout {
 		
 		// Get a hold of the view
 		comments = (EditText)findViewById(R.id.comments);
-		move = (ImageButton)findViewById(R.id.button_move);
+		cancel = (ImageButton)findViewById(R.id.button_cancel);
 		picked = (ImageButton)findViewById(R.id.button_picked);
 		picture = (ImageButton)findViewById(R.id.button_picture);
 		pictureDrawable = context.getResources().getDrawable(R.drawable.rock_picture);
@@ -73,7 +73,7 @@ public class RockMenu extends SlideLayout {
 		picked.setOnClickListener(new PickedOnClickListener());
 		
 		// Listen for clicks on move button
-		move.setOnClickListener(new MoveOnClickListener());
+		cancel.setOnClickListener(new MoveOnClickListener());
 
 	}
 
