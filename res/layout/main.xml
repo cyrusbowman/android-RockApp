@@ -22,18 +22,6 @@
 		android:clickable="true"
 		android:state_enabled="true" />
 	
-	<!-- A layer used to move rocks around on -->
-	<edu.purdue.rockapp.view.RockMove xmlns:android="http://schemas.android.com/apk/res/android"
-	    android:id="@+id/rock_move"
-	    android:layout_alignLeft="@id/main"
-	    android:layout_alignRight="@id/main"
-	    android:layout_alignTop="@id/main"
-	    android:layout_alignBottom="@id/main"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:visibility="invisible"
-	    android:background="@color/rock_move_background" />
-	
 	<!-- A layout which has the views needed to edit a rock's meta data -->
 	<include layout="@layout/rock_edit" />
 

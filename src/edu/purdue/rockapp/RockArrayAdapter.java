@@ -55,10 +55,10 @@ public class RockArrayAdapter extends ArrayAdapter<String> {
 		
 		// Get the image and type based on the rock picked status
 		if(rock.isPicked()) {
-			imageView.setImageDrawable(this.context.getResources().getDrawable(R.drawable.rock_picked));
+			imageView.setImageDrawable(this.context.getResources().getDrawable(R.drawable.rock_up));
 			typeView.setText(R.string.rock_picked_up);
 		} else {
-			imageView.setImageDrawable(this.context.getResources().getDrawable(R.drawable.rock_not_picked));
+			imageView.setImageDrawable(this.context.getResources().getDrawable(R.drawable.rock_down));
 			typeView.setText(R.string.rock_not_picked_up);
 		}
 

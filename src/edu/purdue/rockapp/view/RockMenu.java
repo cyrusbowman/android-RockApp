@@ -2,8 +2,10 @@ package edu.purdue.rockapp.view;
 
 import java.io.File;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
@@ -37,7 +39,6 @@ public class RockMenu extends SlideLayout {
 	
 	// Broadcast actions
 	public static final String ACTION_TAKE_PICTURE = "edu.purdue.rockapp.view.rockmenu.TAKE_PICTURE";
-	public static final String ACTION_MOVE_ROCK = "edu.purdue.rockapp.view.rockmenu.MOVE_ROCK";
 	
 	public RockMenu(final Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -63,7 +64,7 @@ public class RockMenu extends SlideLayout {
 		pictureDrawable = context.getResources().getDrawable(R.drawable.rock_picture);
 		
 		// Listen for changes to the text box so they can be saved to the rock
-		comments.setOnFocusChangeListener(new CommentsFocusChangeListener());
+		comments.setOnFocusChangeListener(new CommentOnFoucsChangeListener());
 		
 		// Listen for clicks/long holds on the picture button
 		picture.setOnClickListener(new PictureOnClickListener());
@@ -73,7 +74,7 @@ public class RockMenu extends SlideLayout {
 		picked.setOnClickListener(new PickedOnClickListener());
 		
 		// Listen for clicks on move button
-		cancel.setOnClickListener(new MoveOnClickListener());
+		cancel.setOnClickListener(new CancelOnClickListener());
 
 	}
 
@@ -108,8 +109,6 @@ public class RockMenu extends SlideLayout {
 		
 		// Update the view to the new model
 		updateMenu();
-		
-		showEditAction();
 	}
 	
 	/*
@@ -118,11 +117,6 @@ public class RockMenu extends SlideLayout {
 	private void updateMenu() {
 		if(rock == null) {
 			return;
-		}
-		
-		// Show the edit action if the rock is currently picked 
-		if(rock.isPicked()) {
-			showEditAction();
 		}
 		
 		comments.setText(rock.getComments());
@@ -141,10 +135,8 @@ public class RockMenu extends SlideLayout {
 		}
 	}
 	
-	private void showEditAction() {
-		if(editActionMode == null) {
-			editActionMode = startActionMode(new RockEditActionModeCallback());
-		}
+	public void delete() {
+		this.rock.delete();
 	}
 	
 	/*
@@ -204,12 +196,12 @@ public class RockMenu extends SlideLayout {
 	/*
 	 * Focus Change Listener which watches for possible changes in the rocks comments
 	 */
-	private class CommentsFocusChangeListener implements OnFocusChangeListener {
+	private class CommentOnFoucsChangeListener implements OnFocusChangeListener {
 
-		// Flush changes if we lost focus
 		public void onFocusChange(View v, boolean hasFocus) {
 			if(!hasFocus) {
-				flush();
+				RockMenu.this.rock.setComments(comments.getText().toString());
+				RockMenu.this.rock.save();
 			}
 		}
 	}
@@ -274,15 +266,14 @@ public class RockMenu extends SlideLayout {
 	}
 	
 	/*
-	 * Listener for clicks on the picked button
+	 * Listener for clicks on the cancel button
 	 */
-	private class MoveOnClickListener implements OnClickListener {
+	private class CancelOnClickListener implements OnClickListener {
 
 		// Handle the picture image button being clicked
 		public void onClick(View v) {
-			// Notify the app of the an intent to move a rock
-			Intent intent = new Intent(RockMenu.ACTION_MOVE_ROCK);
-			intent.putExtra("id", RockMenu.this.rock.getId());
+			// Ask to revert the last unsaved move 
+			Intent intent = new Intent(Rock.ACTION_REVERT_MOVE);
 			LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 		}
 		
@@ -308,9 +299,6 @@ public class RockMenu extends SlideLayout {
 					
 				} else if (intent.getAction() == Rock.ACTION_DELETED) {
 					handleDeletedRock(context, intent.getExtras().getInt("id"));
-					
-				} else if(intent.getAction() == Rock.ACTION_LONG_HOLD) {
-					handleLongPressOnRock(context, intent.getExtras().getInt("id"));
 				}
 			}
 		}
@@ -318,126 +306,17 @@ public class RockMenu extends SlideLayout {
 		private void handleUpdatedRock(Context context, int rockId) {
 			// Replace model rock
 			RockMenu.this.rock = Rock.getRock(context, rockId);
-			// And update the menu
-			updateMenu();
+			
+			if(RockMenu.this.rock != null) {
+				RockMenu.this.rock.setComments(comments.getText().toString());
+				// And update the menu
+				updateMenu();
+			}	
 		}
 		
 		private void handleDeletedRock(Context context, int rockId) {
 			// Just in case the delete logic doesn't change states
 			hide();
-		}
-		
-		private void handleLongPressOnRock(Context context, int rockId) {
-			showEditAction();
-		}
-	}
-	
-	private class RockEditActionModeCallback implements ActionMode.Callback {
-		
-		// Call when startActionMode() is called
-		// Should inflate the menu
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			MenuInflater inflater = mode.getMenuInflater();
-			inflater.inflate(R.menu.rock_edit, menu);
-				
-			return true;
-		}
-		
-		// Called when the mode is invalidated
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-		
-		// Called when the user selects a menu item
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			boolean result;
-			
-			switch(item.getItemId()) {
-				case R.id.rock_delete:
-
-					// Remove actionMode bar
-					mode.finish();
-					
-					// Confirm delete
-					startActionMode(new RockDeleteActionModeCallback());
-					
-					result = true;
-				break;
-				
-				default:
-					result = false;
-				break;
-			}
-			
-			return result;
-		}
-
-		// Called when the user exists the action mode
-		public void onDestroyActionMode(ActionMode mode) {
-			editActionMode = null;
-			
-			if(isOpen()) {
-				RockMenu.this.rock.setPicked(false);
-				hide();
-			}
-		}
-	}
-	
-private class RockDeleteActionModeCallback implements ActionMode.Callback {
-		
-		// Call when startActionMode() is called
-		// Should inflate the menu
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			MenuInflater inflater = mode.getMenuInflater();
-			inflater.inflate(R.menu.rock_delete, menu);
-				
-			return true;
-		}
-		
-		// Called when the mode is invalidated
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-		
-		// Called when the user selects a menu item
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			boolean result;
-			
-			switch(item.getItemId()) {
-				case R.id.rock_delete_yes:
-					// Delete rock
-					RockMenu.this.rock.delete();
-					
-					// Remove actionMode bar
-					mode.finish();
-					
-					result = true;
-				break;
-				
-				case R.id.rock_delete_no:
-					
-					// Remove the actionMode bar
-					mode.finish();
-					
-					result = true;
-				break;
-				
-				default:
-					result = false;
-				break;
-			}
-			
-			return result;
-		}
-
-		// Called when the user exists the action mode
-		public void onDestroyActionMode(ActionMode mode) {
-			editActionMode = null;
-			
-			if(isOpen()) {
-				RockMenu.this.rock.setPicked(false);
-				hide();
-			}
 		}
 	}
 	
@@ -470,11 +349,9 @@ private class RockDeleteActionModeCallback implements ActionMode.Callback {
 			
 			switch(item.getItemId()) {
 				case R.id.rock_image_delete:
-					RockMenu.this.rock.deletePicture();
+					showConfirmRockImageDeleteAlert(mode);
 					result = true;
 					
-					// Update the action to remove the delete option
-					mode.invalidate();
 				break;
 				
 				case R.id.rock_image_camera:
@@ -504,6 +381,33 @@ private class RockDeleteActionModeCallback implements ActionMode.Callback {
 		// Called when the user exists the action mode
 		public void onDestroyActionMode(ActionMode mode) {
 			imageActionMode = null;
+		}
+		
+		/* Creates a dialog which the user can use to confirm a rock image delete
+		 */
+		private void showConfirmRockImageDeleteAlert(final ActionMode mode) {
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			
+			builder.setTitle(R.string.rock_image_delete);
+			builder.setMessage(R.string.rock_image_delete_title);
+			
+			builder.setPositiveButton(R.string.rock_image_delete_yes, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					RockMenu.this.rock.deletePicture();
+					
+					// Update the action to remove the delete option
+					mode.invalidate();
+				}
+			});
+			
+			builder.setNegativeButton(R.string.rock_image_delete_no, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					// Do nothing... The app is much less interesting...
+				}
+			});
+			
+			builder.create().show();
 		}
 	}
 	

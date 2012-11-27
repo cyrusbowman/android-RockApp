@@ -1,9 +1,11 @@
 package edu.purdue.rockapp.location;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.location.LocationManager;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
@@ -11,14 +13,16 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Projection;
 
 public class RockLocationManager {
-	Context context;
+	Context mContext;
 	boolean mHaveFix = false;
 	MyLocationOverlay mLocationOverlay;
 	MapView mMapView;
 	
+	public static final String ACTION_FIRSTFIX = "edu.purdue.rockapp.location.FIRSTFIX";
+	
 	public RockLocationManager(Context context, MapView mapView) {
-		this.context = context;
-		this.mMapView = mapView;
+		mContext = context;
+		mMapView = mapView;
 		
 		// Create the google maps API location overlay
 		mLocationOverlay = new MyLocationOverlay(context, mapView);
@@ -35,6 +39,7 @@ public class RockLocationManager {
 		mMapView.getOverlays().remove(mLocationOverlay);
 	}
 	
+	// Start listening to user location
 	public void enable() {
 		// Make sure we mark that we do not have a fix
 		mHaveFix = false;
@@ -47,20 +52,9 @@ public class RockLocationManager {
 				// We now have a fix
 				mHaveFix = true;
 				
-				/* TODO: Make this happen somewhere else
-				// We have not moved so lets move to the current fix
-				GeoPoint p = mMapView.getMapCenter();
-				
-				if(p.equals(startingCenter) && 
-				   startingZoom == mMapView.getZoomLevel() && 
-				   mMapView.getLatitudeSpan() > DEFAULT_START_ZOOM_LAT_SPAN &&
-				   mMapView.getLongitudeSpan() > DEFAULT_START_ZOOM_LONG_SPAN) {
-					moveMapTo(mMyLocation.getMyLocation(), true);
-				}
-				
-				// Update the action bar (on the UI thread) for the location button
-				invalidateActionBar();
-				*/
+				// Let everyone else know we got our first fix
+				Intent msg = new Intent(RockLocationManager.ACTION_FIRSTFIX);
+				LocalBroadcastManager.getInstance(mContext).sendBroadcast(msg);
 			}
 		});
 	}
@@ -76,6 +70,8 @@ public class RockLocationManager {
 		return mLocationOverlay.getMyLocation();
 	}
 	
+	// See if we have a provider giving us locations and that we have
+	// had a least one fix since an .enabled() 
 	public boolean haveUserLocation() {
 		if(hasLocationProvider()) {
 			return mHaveFix; 
@@ -119,7 +115,7 @@ public class RockLocationManager {
 	
 	/* A helper function to check to see if there is some sort of location provider or not */
 	public boolean hasLocationProvider() {
-		LocationManager locMan = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
+		LocationManager locMan = (LocationManager)mContext.getSystemService(Context.LOCATION_SERVICE);
 		
 		// See if we have either GPS or network locations
 		if(!locMan.isProviderEnabled(LocationManager.GPS_PROVIDER) &&

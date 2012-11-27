@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_alignParentLeft="true"
             android:contentDescription="@string/rock_cancel"
-            android:src="@drawable/move2" />
+            android:src="@drawable/cancel" />
         
         <!-- Toggle picked up status of the rock button -->
         <ImageButton
