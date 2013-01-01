@@ -9,7 +9,7 @@
     
     <!-- Setup a ROCKS permission with arbitrates access to the rocks content provider -->
     <permission 
-        android:name="edu.purdue.libwaterapps.permission.ROCKS"
+        android:name="edu.purdue.libcommon.permission.ROCKS"
         android:label="@string/rock_perm_label"
         android:description="@string/rock_perm_desc"
         android:protectionLevel="normal" />
@@ -22,7 +22,7 @@
 	<!-- Need to write images to after taking rock pictures -->    
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- We require permission to access the rocks content provider -->
-    <uses-permission android:name="edu.purdue.libwaterapps.permission.ROCKS" />
+    <uses-permission android:name="edu.purdue.libcommon.permission.ROCKS" />
     
 
     <!-- RockApp application -->
@@ -33,11 +33,11 @@
        	<uses-library android:name="com.google.android.maps" /> 
        	
        	<!-- RockApp is responsible for hosting the rocks content provider. Tell android about it here. -->
-       	<provider android:authorities="edu.purdue.libwaterapps.provider"
-       	    android:name="edu.purdue.libwaterapps.provider.RockProvider" android:exported="true" 
-       	    android:permission="edu.purdue.libwaterapps.permission.ROCKS" android:enabled="true" />
+       	<provider android:authorities="edu.purdue.libcommon.provider"
+       	    android:name="edu.purdue.libcommon.provider.RockProvider" android:exported="true" 
+       	    android:permission="edu.purdue.libcommon.permission.ROCKS" android:enabled="true" />
        	
-       	<!-- Main screen activity (displays the map, add/remove rocks, select and edit rock meta data, and get list of rocks -->
+       	<!-- Main screen activity (displays the map, add/remove rocks, select and edit rock meta data, and get list of rocks) -->
         <activity android:name="RockAppActivity"
                   android:windowSoftInputMode="adjustResize|stateHidden"
                   android:label="@string/app_name">
