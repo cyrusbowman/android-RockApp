@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RockApp</string>
-    <string name="google_api_key">02YP-AXMV63q4eLgEijgWN05kQTrY0j3q2YxcOg</string>
+    <string name="google_api_key">018o4VfR9saU9YzLLxfrn2AD_eIt85IbHCEcFQQ</string>
     <string name="comments">Comments&#8230;</string> <!-- &&;#8230; is elipse -->
     
     <string name="menu_add">New Rock</string>
