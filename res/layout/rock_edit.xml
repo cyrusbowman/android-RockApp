@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Layout for the menu that pops up -->
-<edu.purdue.rockapp.view.RockMenu xmlns:android="http://schemas.android.com/apk/res/android"
+<edu.purdue.autogenics.rockapp.view.RockMenu xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/menu"
     speed="150"
     slideOutDirection="up"
@@ -60,4 +60,4 @@
         android:hint="@string/comments"
         android:lines="1" />
     
-</edu.purdue.rockapp.view.RockMenu>
+</edu.purdue.autogenics.rockapp.view.RockMenu>

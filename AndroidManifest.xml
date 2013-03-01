@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.purdue.rockapp"
+    package="edu.purdue.autogenics.rockapp"
     android:versionCode="1"
     android:versionName="1.0">
 
@@ -34,11 +34,12 @@
        	
        	<!-- RockApp is responsible for hosting the rocks content provider. Tell android about it here. -->
        	<provider android:authorities="edu.purdue.libwaterapps.provider"
-       	    android:name="edu.purdue.libwaterapps.provider.RockProvider" android:exported="true" 
+       	    android:name="edu.purdue.libwaterapps.provider.RockProvider"
+       	    android:exported="true" 
        	    android:permission="edu.purdue.libwaterapps.permission.ROCKS" android:enabled="true" />
        	
        	<!-- Main screen activity (displays the map, add/remove rocks, select and edit rock meta data, and get list of rocks -->
-        <activity android:name="RockAppActivity"
+        <activity android:name="edu.purdue.autogenics.rockapp.RockAppActivity"
                   android:windowSoftInputMode="adjustResize|stateHidden"
                   android:label="@string/app_name">
              

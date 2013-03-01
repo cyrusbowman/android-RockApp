@@ -1,4 +1,4 @@
-package edu.purdue.rockapp.view;
+package edu.purdue.autogenics.rockapp.view;
 
 import java.io.File;
 
@@ -20,10 +20,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import edu.purdue.autogenics.rockapp.R;
 import edu.purdue.libwaterapps.rock.Rock;
 import edu.purdue.libwaterapps.utils.ImageTools;
 import edu.purdue.libwaterapps.view.SlideLayout;
-import edu.purdue.rockapp.R;
 
 public class RockMenu extends SlideLayout {
 	private EditText comments;
@@ -38,7 +38,7 @@ public class RockMenu extends SlideLayout {
 	private ActionMode imageActionMode;
 	
 	// Broadcast actions
-	public static final String ACTION_TAKE_PICTURE = "edu.purdue.rockapp.view.rockmenu.TAKE_PICTURE";
+	public static final String ACTION_TAKE_PICTURE = "edu.purdue.autogenics.rockapp.view.rockmenu.TAKE_PICTURE";
 	
 	public RockMenu(final Context context, AttributeSet attrs) {
 		super(context, attrs);

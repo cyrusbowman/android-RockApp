@@ -1,4 +1,4 @@
-package edu.purdue.rockapp;
+package edu.purdue.autogenics.rockapp;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +37,11 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MapView.ReticleDrawMode;
 
+import edu.purdue.autogenics.rockapp.location.RockLocationManager;
+import edu.purdue.autogenics.rockapp.view.RockMenu;
 import edu.purdue.libwaterapps.rock.Rock;
 import edu.purdue.libwaterapps.view.maps.RockMapGroup;
 import edu.purdue.libwaterapps.view.maps.RockMapOverlay;
-import edu.purdue.rockapp.location.RockLocationManager;
-import edu.purdue.rockapp.view.RockMenu;
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;

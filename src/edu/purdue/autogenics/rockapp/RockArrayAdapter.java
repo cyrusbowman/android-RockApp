@@ -1,4 +1,4 @@
-package edu.purdue.rockapp;
+package edu.purdue.autogenics.rockapp;
 
 import java.util.ArrayList;
 

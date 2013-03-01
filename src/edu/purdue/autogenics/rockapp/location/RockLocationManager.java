@@ -1,4 +1,4 @@
-package edu.purdue.rockapp.location;
+package edu.purdue.autogenics.rockapp.location;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +18,7 @@ public class RockLocationManager {
 	MyLocationOverlay mLocationOverlay;
 	MapView mMapView;
 	
-	public static final String ACTION_FIRSTFIX = "edu.purdue.rockapp.location.FIRSTFIX";
+	public static final String ACTION_FIRSTFIX = "edu.purdue.autogenics.rockapp.location.FIRSTFIX";
 	
 	public RockLocationManager(Context context, MapView mapView) {
 		mContext = context;
