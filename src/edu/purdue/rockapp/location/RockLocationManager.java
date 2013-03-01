@@ -14,15 +14,12 @@ import com.google.android.maps.Projection;
 
 public class RockLocationManager {
 	Context mContext;
-	MapView mMapView;
-	
 	boolean mHaveFix = false;
 	MyLocationOverlay mLocationOverlay;
+	MapView mMapView;
 	
-	// Broadcast action used to tell the world we have the first fix
 	public static final String ACTION_FIRSTFIX = "edu.purdue.rockapp.location.FIRSTFIX";
 	
-	// Class which manages the location data and simplifies it
 	public RockLocationManager(Context context, MapView mapView) {
 		mContext = context;
 		mMapView = mapView;

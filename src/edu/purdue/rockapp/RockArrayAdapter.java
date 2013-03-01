@@ -13,21 +13,17 @@ import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 
-import edu.purdue.libcommon.rock.Rock;
+import edu.purdue.libwaterapps.rock.Rock;
 
 // ArrayAdapter used to drive the rock list
 public class RockArrayAdapter extends ArrayAdapter<String> {
 	private final Context context;
-	
 	private ArrayList<Rock> rocks;
-	
 	private GeoPoint currentLoc;
 	private boolean fromUser;
-	
 	private static final double METERS_TO_FEET = 3.28084;
 	private static final double FEET_TO_MILES = 0.00018939393;
 	
-	// Array Adapter constructor for displaying rocks in list form
 	public RockArrayAdapter(Context context, String[] values, ArrayList<Rock> rocks, GeoPoint currentLoc, boolean fromUser) {
 		this(context, values);
 		

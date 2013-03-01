@@ -37,31 +37,27 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MapView.ReticleDrawMode;
 
-import edu.purdue.libcommon.rock.Rock;
-import edu.purdue.libcommon.view.maps.RockMapOverlay;
+import edu.purdue.libwaterapps.rock.Rock;
+import edu.purdue.libwaterapps.view.maps.RockMapGroup;
+import edu.purdue.libwaterapps.view.maps.RockMapOverlay;
 import edu.purdue.rockapp.location.RockLocationManager;
 import edu.purdue.rockapp.view.RockMenu;
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;
 	private MapController mMapController;
-	private RockMapOverlay mRockMapOverlay;
-	
-	private RockMenu mRockMenu;
-	
 	private RockLocationManager mRockLocationManager;
-	
+	private RockMapOverlay mRockMapOverlay;
+	private RockMenu mRockMenu;
 	private int mCurrentState;
-	private GeoPoint startingCenter = null;
-	private int startingZoom = 0;
-	
 	private Bundle bundle = null;
-	private final Handler uiHandler = new Handler();
-	
 	private RockBroadcastReciever rockBroadcastReciever;
 	private RockMenuBroadcastReciever rockMenuBroadcastReciever;
 	private LocationBroadcastReciever locationBroadcastReciever;
 	private RockMapGroupBroadcastReciever rockMapGroupBroadcastReciever;
+	private final Handler uiHandler = new Handler();
+	private GeoPoint startingCenter = null;
+	private int startingZoom = 0;
 	
 	// UI States
 	private static final int STATE_DEFAULT = 0;
@@ -118,8 +114,8 @@ public class RockAppActivity extends MapActivity {
 		
 		// Restore from bundle
 		if(bundle != null) {
-			int rockId = bundle.getInt("rock_edit.currentRock", -1);
-			if(rockId > 0) {
+			int rockId = bundle.getInt("rock_edit.currentRock", Rock.BLANK_ROCK_ID);
+			if(rockId != Rock.BLANK_ROCK_ID) {
 				mRockMapOverlay.setSelected(rockId);
 			}
 			
@@ -162,7 +158,9 @@ public class RockAppActivity extends MapActivity {
 		mRockMenu.registerListeners();
 		
 		// Listen in on rocks being selected so to show the edit menu
-		LocalBroadcastManager.getInstance(this).registerReceiver(rockBroadcastReciever, new IntentFilter(RockMapOverlay.ACTION_ROCK_SELECTED));
+		LocalBroadcastManager.getInstance(this).registerReceiver(rockBroadcastReciever, new IntentFilter(Rock.ACTION_SELECTED));
+		LocalBroadcastManager.getInstance(this).registerReceiver(rockBroadcastReciever, new IntentFilter(Rock.ACTION_DOUBLE_TAP));
+		LocalBroadcastManager.getInstance(this).registerReceiver(rockBroadcastReciever, new IntentFilter(Rock.ACTION_MOVE_DONE));
 		
 		// Listen for image requests from RockMenu
 		LocalBroadcastManager.getInstance(this).registerReceiver(rockMenuBroadcastReciever, new IntentFilter(RockMenu.ACTION_TAKE_PICTURE));
@@ -171,7 +169,7 @@ public class RockAppActivity extends MapActivity {
 		LocalBroadcastManager.getInstance(this).registerReceiver(locationBroadcastReciever, new IntentFilter(RockLocationManager.ACTION_FIRSTFIX));
 		
 		// Listen for rock group announcements 
-		LocalBroadcastManager.getInstance(this).registerReceiver(rockMapGroupBroadcastReciever, new IntentFilter(RockMapOverlay.ACTION_GROUP_SELECTED));
+		LocalBroadcastManager.getInstance(this).registerReceiver(rockMapGroupBroadcastReciever, new IntentFilter(RockMapGroup.ACTION_GROUP_SELECTED));
 	}
 
 	/*
@@ -504,18 +502,18 @@ public class RockAppActivity extends MapActivity {
 		builder.setPositiveButton(R.string.rock_delete_yes, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				// Delete the currently selected rock
-				Rock rock = mRockMapOverlay.getSelected();
+				//Rock rock = mRockMapOverlay.getSelected();
 				
-				if(rock != null) {
-					mRockMenu.stopEdit();
-					rock.delete();
-				}
+				//if(rock.getId() != Rock.BLANK_ROCK_ID) {
+				//	rock.delete();
+				//}
+				mRockMenu.delete();
 			}
 		});
 		
 		builder.setNegativeButton(R.string.rock_delete_no, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				// Do nothing... 
+				// Do nothing... The app is much less interesting...
 			}
 		});
 		
@@ -598,7 +596,7 @@ public class RockAppActivity extends MapActivity {
 		});
 		
 		// Remove focus from overlay
-		mRockMapOverlay.setSelected(-1);
+		mRockMapOverlay.setSelected(Rock.BLANK_ROCK_ID);
 		
 		// Build titles for list
 		String[] titleList = new String[rockList.size()];
@@ -649,9 +647,9 @@ public class RockAppActivity extends MapActivity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// A message from the rock overlay that a rock was selected
-			if(intent.getAction() == RockMapOverlay.ACTION_ROCK_SELECTED) {
-				int rockId = intent.getExtras().getInt("id", -1);
-				if(rockId <= 0) {
+			if(intent.getAction() == Rock.ACTION_SELECTED) {
+				int rockId = intent.getExtras().getInt("id", Rock.BLANK_ROCK_ID);
+				if(rockId == Rock.BLANK_ROCK_ID) {
 					setState(STATE_DEFAULT);
 					
 				} else {
@@ -660,7 +658,9 @@ public class RockAppActivity extends MapActivity {
 					
 					setState(STATE_ROCK_EDIT);
 				}
-			} 
+			} else if(intent.getAction() == Rock.ACTION_MOVE_DONE) {
+				setState(STATE_ROCK_EDIT);
+			}
 			
 			invalidateActionBar();
 		}
@@ -735,7 +735,7 @@ public class RockAppActivity extends MapActivity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// A message from the rock overlay that a rock was selected
-			if(intent.getAction() == RockMapOverlay.ACTION_GROUP_SELECTED) {
+			if(intent.getAction() == RockMapGroup.ACTION_GROUP_SELECTED) {
 				GeoPoint p= mMapView.getMapCenter();
 				
 				GeoPoint pNew = new GeoPoint(intent.getIntExtra("lat", p.getLatitudeE6()),
@@ -751,8 +751,7 @@ public class RockAppActivity extends MapActivity {
 				// Move map so that the group is displayed as individual rocks now
 				mMapView.getController().zoomToSpan(latSpan, lonSpan);
 				mMapView.getController().animateTo(pNew);
-				// Force the map to update ASAP
-				mMapView.postInvalidate();
+				
 			} 
 		}
 	}

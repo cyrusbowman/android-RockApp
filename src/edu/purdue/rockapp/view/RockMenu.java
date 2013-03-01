@@ -20,25 +20,20 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import edu.purdue.libcommon.rock.Rock;
-import edu.purdue.libcommon.utils.ImageTools;
-import edu.purdue.libcommon.view.SlideLayout;
-import edu.purdue.libcommon.view.maps.RockMapOverlay;
+import edu.purdue.libwaterapps.rock.Rock;
+import edu.purdue.libwaterapps.utils.ImageTools;
+import edu.purdue.libwaterapps.view.SlideLayout;
 import edu.purdue.rockapp.R;
 
 public class RockMenu extends SlideLayout {
-	private Context context;
-	
 	private EditText comments;
 	private ImageButton cancel;
 	private ImageButton picked;
 	private ImageButton picture;
-	
 	private Drawable pictureDrawable;
 	private Rock rock;
-	
-	private LocalBroadcastReceiver localBroadcastReceiver;
-	
+	private Context context;
+	private RockBroadcastReceiver rockBroadcastReceiver;
 	private ActionMode editActionMode;
 	private ActionMode imageActionMode;
 	
@@ -116,12 +111,6 @@ public class RockMenu extends SlideLayout {
 		updateMenu();
 	}
 	
-	public void stopEdit() {
-		this.rock = null;
-		
-		hide();
-	}
-	
 	/*
 	 * Update the view from the current rock model
 	 */
@@ -138,13 +127,16 @@ public class RockMenu extends SlideLayout {
 			picked.setSelected(false);
 		}
 		
-		// If there is a rock image show it, otherwise so the camera icon
 		String imagePath = rock.getPicture();
 		if(imagePath != null) {
 			picture.setImageBitmap(ImageTools.sizePicture(imagePath, pictureDrawable.getIntrinsicHeight(), pictureDrawable.getIntrinsicWidth()));
 		} else {
 			picture.setImageDrawable(pictureDrawable);
 		}
+	}
+	
+	public void delete() {
+		this.rock.delete();
 	}
 	
 	/*
@@ -181,11 +173,12 @@ public class RockMenu extends SlideLayout {
 	 * A method to register listeners (should be called by activity in onResume)
 	 */
 	public void registerListeners() {
-		if(localBroadcastReceiver == null) {
-			localBroadcastReceiver = new LocalBroadcastReceiver();
+		if(rockBroadcastReceiver == null) {
+			rockBroadcastReceiver = new RockBroadcastReceiver();
 			
-			LocalBroadcastManager.getInstance(context).registerReceiver(localBroadcastReceiver, new IntentFilter(Rock.ACTION_UPDATED));
-			LocalBroadcastManager.getInstance(context).registerReceiver(localBroadcastReceiver, new IntentFilter(Rock.ACTION_DELETED));
+			LocalBroadcastManager.getInstance(context).registerReceiver(rockBroadcastReceiver, new IntentFilter(Rock.ACTION_UPDATED));
+			LocalBroadcastManager.getInstance(context).registerReceiver(rockBroadcastReceiver, new IntentFilter(Rock.ACTION_DELETED));
+			LocalBroadcastManager.getInstance(context).registerReceiver(rockBroadcastReceiver, new IntentFilter(Rock.ACTION_LONG_HOLD));
 		}
 	}
 	
@@ -193,10 +186,10 @@ public class RockMenu extends SlideLayout {
 	 * A method to unregister listeners (should be called by activity in onPause)
 	 */
 	public void unregisterListeners() {
-		if(localBroadcastReceiver != null) {
-			LocalBroadcastManager.getInstance(context).unregisterReceiver(localBroadcastReceiver);
+		if(rockBroadcastReceiver != null) {
+			LocalBroadcastManager.getInstance(context).unregisterReceiver(rockBroadcastReceiver);
 			
-			localBroadcastReceiver = null;
+			rockBroadcastReceiver = null;
 		}
 	}
 	
@@ -206,9 +199,9 @@ public class RockMenu extends SlideLayout {
 	private class CommentOnFoucsChangeListener implements OnFocusChangeListener {
 
 		public void onFocusChange(View v, boolean hasFocus) {
-			if(!hasFocus && rock != null) {
-				rock.setComments(comments.getText().toString());
-				rock.save();
+			if(!hasFocus) {
+				RockMenu.this.rock.setComments(comments.getText().toString());
+				RockMenu.this.rock.save();
 			}
 		}
 	}
@@ -221,10 +214,10 @@ public class RockMenu extends SlideLayout {
 		// Handle the picture image button being clicked
 		public void onClick(View v) {
 			
-			if(rock.getPicture() == null) {
+			if(RockMenu.this.rock.getPicture() == null) {
 				// Take a picture because one does not exist
 				Intent intent = new Intent(RockMenu.ACTION_TAKE_PICTURE);
-				intent.putExtra("id", rock.getId());
+				intent.putExtra("id", RockMenu.this.rock.getId());
 				intent.putExtra("path", Rock.IMAGE_PATH);
 				intent.putExtra("filename", String.format(Rock.IMAGE_FILENAME_PATTERN, rock.getId()));
 			
@@ -268,7 +261,6 @@ public class RockMenu extends SlideLayout {
 			// Toggle the current rock
 			Rock rock = RockMenu.this.rock;
 			rock.setPicked(!rock.isPicked());
-			
 			rock.save();
 		}	
 	}
@@ -278,10 +270,10 @@ public class RockMenu extends SlideLayout {
 	 */
 	private class CancelOnClickListener implements OnClickListener {
 
-		// Handle the cancel image button being clicked
+		// Handle the picture image button being clicked
 		public void onClick(View v) {
 			// Ask to revert the last unsaved move 
-			Intent intent = new Intent(RockMapOverlay.ACTION_REVERT_MOVE);
+			Intent intent = new Intent(Rock.ACTION_REVERT_MOVE);
 			LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 		}
 		
@@ -291,7 +283,7 @@ public class RockMenu extends SlideLayout {
 	/*
 	 * Listen on changes to rocks and react to the current rock being modified
 	 */
-	private class LocalBroadcastReceiver extends BroadcastReceiver {
+	private class RockBroadcastReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// Only work the notification if a rock is selected
@@ -299,7 +291,7 @@ public class RockMenu extends SlideLayout {
 				return;
 			}
 			
-			int rockId = intent.getExtras().getInt("id", -1);
+			int rockId = intent.getExtras().getInt("id", Rock.BLANK_ROCK_ID);
 			
 			if(RockMenu.this.rock.getId() == rockId) {
 				if(intent.getAction() == Rock.ACTION_UPDATED) {

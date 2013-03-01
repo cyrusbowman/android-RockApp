@@ -3,7 +3,7 @@
     
     <item 
         android:id="@+id/rock_image_delete"
-        android:title="@string/rock_image_delete"
+        android:title="@string/rock_delete"
         android:icon="@drawable/delete"
         android:showAsAction="always|withText" />
     
