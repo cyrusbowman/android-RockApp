@@ -21,9 +21,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import edu.purdue.autogenics.rockapp.R;
-import edu.purdue.libwaterapps.rock.Rock;
-import edu.purdue.libwaterapps.utils.ImageTools;
-import edu.purdue.libwaterapps.view.SlideLayout;
+import edu.purdue.autogenics.libcommon.rock.Rock;
+import edu.purdue.autogenics.libcommon.utils.ImageTools;
+import edu.purdue.autogenics.libcommon.view.SlideLayout;
 
 public class RockMenu extends SlideLayout {
 	private EditText comments;

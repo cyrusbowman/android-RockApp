@@ -39,9 +39,9 @@ import com.google.android.maps.MapView.ReticleDrawMode;
 
 import edu.purdue.autogenics.rockapp.location.RockLocationManager;
 import edu.purdue.autogenics.rockapp.view.RockMenu;
-import edu.purdue.libwaterapps.rock.Rock;
-import edu.purdue.libwaterapps.view.maps.RockMapGroup;
-import edu.purdue.libwaterapps.view.maps.RockMapOverlay;
+import edu.purdue.autogenics.libcommon.rock.Rock;
+import edu.purdue.autogenics.libcommon.view.maps.RockMapGroup;
+import edu.purdue.autogenics.libcommon.view.maps.RockMapOverlay;
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;

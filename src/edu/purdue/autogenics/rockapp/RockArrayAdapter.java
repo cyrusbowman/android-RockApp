@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 
-import edu.purdue.libwaterapps.rock.Rock;
+import edu.purdue.autogenics.libcommon.rock.Rock;
 
 // ArrayAdapter used to drive the rock list
 public class RockArrayAdapter extends ArrayAdapter<String> {
