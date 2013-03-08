@@ -49,6 +49,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name="edu.purdue.autogenics.rockapp.trello.TrelloService"
+            android:enabled="true">
+            <intent-filter>
+		        <action android:name="edu.purdue.autogenics.trello"/> <!--  this is from the libcommon -->
+		        <action android:name="android.intent.action.SEND"/>
+		        <category android:name="android.intent.category.DEFAULT"/>
+		    </intent-filter>
+        </service>
 
     </application>
 

@@ -59,12 +59,11 @@
 	</item>
 	
 	<!-- Resync with remote servers -->
-	<!-- 
+	
     <item 
         android:id="@+id/sync"
         android:showAsAction="ifRoom" 
 	    android:icon="@drawable/refresh"
         android:title="@string/menu_sync" />
-    -->
     
 </menu>

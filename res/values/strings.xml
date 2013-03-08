@@ -49,4 +49,7 @@
     <string name="rock_list_miles">mi away</string>
     <string name="rock_list_from_you">from you</string>
     <string name="rock_list_from_center">from map center</string>
+    
+    <string name="preferences_name">RockPrefs</string>
+    
 </resources>

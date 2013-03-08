@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.UUID;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -13,6 +14,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,10 +40,12 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MapView.ReticleDrawMode;
 
 import edu.purdue.autogenics.rockapp.location.RockLocationManager;
+import edu.purdue.autogenics.rockapp.trello.TrelloService;
 import edu.purdue.autogenics.rockapp.view.RockMenu;
 import edu.purdue.autogenics.libcommon.rock.Rock;
 import edu.purdue.autogenics.libcommon.view.maps.RockMapGroup;
 import edu.purdue.autogenics.libcommon.view.maps.RockMapOverlay;
+import edu.purdue.autogenics.libcommon.trello.TrelloRequest;
 
 public class RockAppActivity extends MapActivity {
 	private MapView mMapView;
@@ -72,13 +76,28 @@ public class RockAppActivity extends MapActivity {
 	private static final int DEFAULT_START_ZOOM_LAT_SPAN = 50000;
 	private static final int DEFAULT_START_ZOOM_LONG_SPAN = 50000;  
 	private static final double DEFAULT_LAT_LON_SPAN_OVER_MULTIPLIER = 1.2;
-	
+		
 	/* Called by Android when application is created */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		bundle = savedInstanceState;
+		
+		//Check weather it is first run ever
+		// Restore preferences
+		SharedPreferences settings = getSharedPreferences(getString(R.string.preferences_name), 0);
+		boolean firstRun = settings.getBoolean("firstRun", false);
+		if(firstRun == false){
+			//Do all first run necessities
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putBoolean("firstRun", true);
+			editor.putString(TrelloService.Board1, UUID.randomUUID().toString());
+			editor.putString(TrelloService.List1, UUID.randomUUID().toString());
+			editor.putString(TrelloService.List2, UUID.randomUUID().toString());
+			
+			// Commit the edits!
+			editor.commit();
+		}
 		
 		// Set the view for the application
 		setContentView(R.layout.main);
@@ -146,7 +165,7 @@ public class RockAppActivity extends MapActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
+	
 		// Start looking for current location
 		mRockLocationManager.enable();
 		
@@ -343,6 +362,20 @@ public class RockAppActivity extends MapActivity {
 				showConfirmRockDeleteAlert();
 				result = true;
 			break;
+			case R.id.sync:
+				
+				//Sync
+				Intent sendIntent2 = new Intent();
+				Bundle extras2 = new Bundle();
+				extras2.putString("Sync", "Nothing Matters");
+				extras2.putString("owner", "edu.purdue.autogenics.rockapp");
+				sendIntent2.setAction(Intent.ACTION_SEND);
+				sendIntent2.setPackage("edu.purdue.autogenics.trello");
+				sendIntent2.putExtras(extras2);
+				this.startService(sendIntent2);
+				
+				result = true;
+			break;
 		}
 		
 		// If we didn't handle, let the super version try
@@ -459,8 +492,25 @@ public class RockAppActivity extends MapActivity {
 	 */
 	public void addRock() {
 		// Rock and save in DB (triggering it to display on the map)
+		Log.d("Rock App HERE", "I got here");
 		Rock rock = new Rock(this, mRockLocationManager.getBestLocation(), false);
+		String UDID = UUID.randomUUID().toString();
+		rock.setTrelloId(UDID);
 		rock.save();
+		
+		//Send trello a sync request for this rock
+		/*TrelloRequest request = new TrelloRequest();
+		request.setRequest(TrelloRequest.REQUEST_PUSH);
+		request.setType(TrelloRequest.TYPE_CARD);
+		request.setId(rock.getTrelloId());
+		
+		Bundle b = new Bundle();
+		b.putParcelable(TrelloRequest.KEY, request);
+	
+		Intent i = new Intent();
+		i.setAction(Intent.ACTION_SEND);
+		i.putExtras(b);
+		this.startService(i)*/
 	}
 
 	/* Creates a dialog which the user can use to enable a location service. 
