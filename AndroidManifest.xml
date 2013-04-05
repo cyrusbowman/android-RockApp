@@ -6,6 +6,7 @@
 
     <!-- We use ActionBar (with no fall back) so we require Android 3.0 or greater -->
     <uses-sdk android:minSdkVersion="11" />
+  
     
     <!-- Setup a ROCKS permission with arbitrates access to the rocks content provider -->
     <permission 

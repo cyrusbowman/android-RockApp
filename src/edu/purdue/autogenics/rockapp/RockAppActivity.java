@@ -88,15 +88,7 @@ public class RockAppActivity extends MapActivity {
 		SharedPreferences settings = getSharedPreferences(getString(R.string.preferences_name), 0);
 		boolean firstRun = settings.getBoolean("firstRun", false);
 		if(firstRun == false){
-			//Do all first run necessities
-			SharedPreferences.Editor editor = settings.edit();
-			editor.putBoolean("firstRun", true);
-			editor.putString(TrelloService.Board1, UUID.randomUUID().toString());
-			editor.putString(TrelloService.List1, UUID.randomUUID().toString());
-			editor.putString(TrelloService.List2, UUID.randomUUID().toString());
 			
-			// Commit the edits!
-			editor.commit();
 		}
 		
 		// Set the view for the application
@@ -365,14 +357,14 @@ public class RockAppActivity extends MapActivity {
 			case R.id.sync:
 				
 				//Sync
-				Intent sendIntent2 = new Intent();
-				Bundle extras2 = new Bundle();
-				extras2.putString("Sync", "Nothing Matters");
-				extras2.putString("owner", "edu.purdue.autogenics.rockapp");
-				sendIntent2.setAction(Intent.ACTION_SEND);
-				sendIntent2.setPackage("edu.purdue.autogenics.trello");
-				sendIntent2.putExtras(extras2);
-				this.startService(sendIntent2);
+				Intent sendIntent6 = new Intent();
+				Bundle extras6 = new Bundle();
+				extras6.putString("sync", "cards");
+				sendIntent6.setPackage("edu.purdue.autogenics.trello");
+				sendIntent6.setAction(Intent.ACTION_SEND);
+				sendIntent6.putExtras(extras6);
+				this.startService(sendIntent6);
+				
 				
 				result = true;
 			break;
